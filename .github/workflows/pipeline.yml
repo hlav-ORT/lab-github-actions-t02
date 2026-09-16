@@ -27,7 +27,6 @@ jobs:
           context: .
           push: ${{ github.event_name != 'pull_request' }}
           tags: |
-             tags: |
             ${{ secrets.DOCKERHUB_USERNAME }}/lab-github-actions:latest
             ${{ secrets.DOCKERHUB_USERNAME }}/lab-github-actions:${{ github.sha }}
 
