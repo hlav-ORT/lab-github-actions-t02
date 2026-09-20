@@ -16,3 +16,23 @@ stages:
           - script: |
               docker build -t lab-github-actions:$(Build.SourceVersion) .
             displayName: 'Docker build'
+
+  - stage: Scan
+    displayName: 'Scan de seguridad (Trivy)'
+    dependsOn: Build
+    jobs:
+      - job: TrivyScan
+        displayName: 'Escaneo Trivy'
+        steps:
+          - script: |
+              docker build -t lab-github-actions:$(Build.SourceVersion) .
+            displayName: 'Docker build (para escaneo)'
+          - script: |
+              docker run --rm -v /var/run/docker.sock:/var/run/docker.sock \
+                aquasec/trivy:latest image \
+                --exit-code 1 \
+                --ignore-unfixed \
+                --vuln-type os,library \
+                --severity CRITICAL,HIGH \
+                lab-github-actions:$(Build.SourceVersion)
+            displayName: 'Trivy scan'
