@@ -60,7 +60,7 @@ jobs:
           fetch-depth: 0  # necesario para análisis completo de historial
 
       - name: Análisis SonarCloud
-        uses: SonarSource/sonarqube-github-action@master
+        uses: SonarSource/sonarqube-scan-action@master
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
