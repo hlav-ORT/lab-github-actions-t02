@@ -15,6 +15,8 @@ jobs:
   build-image:
     name: Build imagen
     runs-on: ubuntu-latest
+    outputs:
+       image-tag: ${{ steps.tag.outputs.value }}   # ← expone el output del job (el tag de imagen, de name 'value') 
     steps:
       - name: Checkout código
         uses: actions/checkout@v4
@@ -27,13 +29,19 @@ jobs:
           echo "Actor: ${{ github.actor }}"
           echo "Runner OS: ${{ runner.os }}"
 
+      - name: Generar tag de imagen
+        id: tag           # ← necesario para referenciarlo después
+        run: |
+          SHORT_SHA=$(echo "${{ github.sha }}" | cut -c1-7)
+          echo "value=$SHORT_SHA" >> $GITHUB_OUTPUT   # value será el nombre del output 
+
       - name: Build imagen (solo local, sin publicar)
         uses: docker/build-push-action@v5
         with:
           context: .
           push: false
           load: true
-          tags: ${{ env.APP_NAME }}:${{ github.sha }}
+          tags: ${{ env.APP_NAME }}:${{ steps.tag.outputs.value }}
 
   scan:
     name: Scan de seguridad (Trivy)
@@ -49,12 +57,12 @@ jobs:
           context: .
           push: false
           load: true
-          tags: ${{ env.APP_NAME }}:${{ github.sha }}
+          tags: ${{ env.APP_NAME }}:${{ needs.build-image.outputs.image-tag }}
 
       - name: Escaneo Trivy
         uses: aquasecurity/trivy-action@master
         with:
-          image-ref: ${{ env.APP_NAME }}:${{ github.sha }}
+          image-ref: ${{ env.APP_NAME }}:${{ needs.build-image.outputs.image-tag }}
           format: table
           exit-code: '1'
           ignore-unfixed: true
